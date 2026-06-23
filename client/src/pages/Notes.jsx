@@ -9,14 +9,20 @@ import {
 
 export default function Notes() {
   const { state } = useApp();
-  const videoRef = useRef(null);
+  const videoRef  = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+
   const [cameraActive, setCameraActive] = useState(false);
-  const [cameraError, setCameraError] = useState('');
-  const [notes, setNotes] = useState([]);
+  const [cameraError, setCameraError]   = useState('');
+  const [captured, setCaptured]         = useState(false);
+  const [notes, setNotes]               = useState([]);
+
   const [notifStatus, setNotifStatus] = useState(
     'Notification' in window ? Notification.permission : 'unsupported'
+  );
+  const [notifsMuted, setNotifsMuted] = useState(
+    () => localStorage.getItem('notifsMuted') === 'true'
   );
 
   useEffect(() => {
@@ -24,6 +30,7 @@ export default function Notes() {
     return () => stopCamera();
   }, []);
 
+  /* ── Camera ─────────────────────────────────── */
   const startCamera = async () => {
     setCameraError('');
     try {
@@ -33,10 +40,9 @@ export default function Notes() {
       streamRef.current = stream;
       videoRef.current.srcObject = stream;
       setCameraActive(true);
+      setCaptured(false);
     } catch {
-      setCameraError(
-        'Camera access denied or unavailable. Allow camera access in your browser settings.'
-      );
+      setCameraError('Camera access denied. Allow camera in your browser settings and try again.');
     }
   };
 
@@ -48,8 +54,8 @@ export default function Notes() {
 
   const captureNote = () => {
     const canvas = canvasRef.current;
-    const video = videoRef.current;
-    canvas.width = video.videoWidth;
+    const video  = videoRef.current;
+    canvas.width  = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
 
@@ -57,112 +63,153 @@ export default function Notes() {
       const record = await saveNote({
         blob,
         title: `Note — ${new Date().toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit'
+          hour: '2-digit', minute: '2-digit'
         })}`
       });
-      setNotes(prev => [...prev, record]);
-    }, 'image/jpeg', 0.8);
+      setNotes(prev => [record, ...prev]);
+      setCaptured(true);
+      setTimeout(() => setCaptured(false), 1500);
+    }, 'image/jpeg', 0.85);
   };
 
-  const handleDeleteNote = async (id) => {
-    await deleteNote(id);
-    setNotes(prev => prev.filter(n => n.id !== id));
-  };
-
+  /* ── Notifications ───────────────────────────── */
   const handleEnableNotifs = async () => {
     const result = await requestPermission();
     setNotifStatus(result);
     if (result === 'granted') {
+      setNotifsMuted(false);
+      localStorage.setItem('notifsMuted', 'false');
       sendTestNotification();
       scheduleDeadlineReminders(state.assignments);
     }
   };
 
+  const handleMuteToggle = () => {
+    const next = !notifsMuted;
+    setNotifsMuted(next);
+    localStorage.setItem('notifsMuted', String(next));
+  };
+
+
+
   return (
     <div className="page">
       <header className="page-header">
-        <h1 className="page-header__title">Notes & Alerts</h1>
+        <div>
+          <p className="page-header__greeting">Smart Campus</p>
+          <h1 className="page-header__title">Notes & Alerts</h1>
+        </div>
       </header>
 
-      {/* Notifications section */}
-      <section className="card section">
-        <h2 className="section__title">🔔 Deadline Reminders</h2>
-        <p className="section__desc">
-          Get notified when assignments are due within 24 hours.
-        </p>
-
-        {notifStatus === 'unsupported' && (
-          <span className="badge badge--warn">Notifications not supported in this browser</span>
-        )}
-        {notifStatus === 'denied' && (
-          <span className="badge badge--danger">
-            Notifications blocked — enable them in browser settings
-          </span>
-        )}
-        {notifStatus === 'granted' ? (
-          <div className="notif-granted">
-            <span className="badge badge--success">✅ Notifications enabled</span>
-            <button
-              className="btn btn--ghost mt-sm"
-              onClick={() => scheduleDeadlineReminders(state.assignments)}
-            >
-              Check upcoming deadlines now
-            </button>
-          </div>
-        ) : (
-          notifStatus !== 'unsupported' && notifStatus !== 'denied' && (
-            <button className="btn btn--primary mt-sm" onClick={handleEnableNotifs}>
-              Enable Notifications
-            </button>
-          )
-        )}
-      </section>
-
-      {/* Camera section */}
-      <section className="card section">
-        <h2 className="section__title">📷 Capture Lecture Notes</h2>
-        <p className="section__desc">
-          Photograph your handwritten notes and save them locally.
-        </p>
-
-        {cameraError && (
-          <p className="field__error mt-sm" role="alert">{cameraError}</p>
-        )}
-
-        <div
-          className="camera-view"
-          style={{ display: cameraActive ? 'block' : 'none' }}
-        >
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            className="camera-view__video"
-          />
-          <div className="camera-view__controls">
-            <button className="btn btn--primary" onClick={captureNote}>
-              📸 Capture
-            </button>
-            <button className="btn btn--ghost" onClick={stopCamera}>
-              Stop
-            </button>
+      {/* ── Notifications card ─────────────────── */}
+      <section className="card notes-section">
+        <div className="notes-section__head">
+          <span className="notes-section__icon">🔔</span>
+          <div>
+            <h2 className="notes-section__title">Deadline Reminders</h2>
+            <p className="notes-section__desc">Alerts 24 h before assignments are due</p>
           </div>
         </div>
 
-        <canvas ref={canvasRef} style={{ display: 'none' }} aria-hidden="true" />
-
-        {!cameraActive && (
-          <button className="btn btn--secondary mt-sm" onClick={startCamera}>
-            Open Camera
-          </button>
+        {notifStatus === 'unsupported' && (
+          <div className="notif-pill notif-pill--warn">
+            ⚠️ Notifications not supported in this browser
+          </div>
         )}
+
+        {notifStatus === 'denied' && (
+          <div className="notif-pill notif-pill--danger">
+            🚫 Blocked — go to browser Settings → Notifications → allow this site
+          </div>
+        )}
+
+        {notifStatus === 'granted' && (
+          <div className={`notif-pill ${notifsMuted ? 'notif-pill--muted' : 'notif-pill--success'}`}>
+            {notifsMuted ? '🔕 Notifications muted' : '✅ Notifications active'}
+          </div>
+        )}
+
+        <div className="notes-actions">
+          {notifStatus !== 'unsupported' && notifStatus !== 'denied' && notifStatus !== 'granted' && (
+            <button className="btn btn--primary notes-actions__main" onClick={handleEnableNotifs}>
+              🔔 Enable Notifications
+            </button>
+          )}
+
+          {notifStatus === 'granted' && (
+            <button
+              className={`btn notes-actions__main ${notifsMuted ? 'btn--enable' : 'btn--ghost'}`}
+              onClick={handleMuteToggle}
+            >
+              {notifsMuted ? '🔔 Unmute Notifications' : '🔕 Mute Notifications'}
+            </button>
+          )}
+        </div>
       </section>
 
-      {/* Saved notes gallery */}
-      {notes.length > 0 && (
-        <section className="section">
-          <h2 className="section__title">Saved Notes ({notes.length})</h2>
+      {/* ── Camera card ────────────────────────── */}
+      <section className="card notes-section">
+        <div className="notes-section__head">
+          <span className="notes-section__icon">📷</span>
+          <div>
+            <h2 className="notes-section__title">Capture Notes</h2>
+            <p className="notes-section__desc">Photo your handwritten notes — saved offline</p>
+          </div>
+        </div>
+
+        {/* Viewfinder — always in DOM so ref is valid */}
+        <div className={`camera-view${cameraActive ? '' : ' camera-view--hidden'}`}>
+          <video ref={videoRef} autoPlay playsInline className="camera-view__video" />
+          {captured && <div className="camera-flash" />}
+        </div>
+
+        {/* Placeholder when camera is off */}
+        {!cameraActive && (
+          <div className="camera-placeholder">
+            <span className="camera-placeholder__icon">📷</span>
+            <span className="camera-placeholder__text">Camera off</span>
+          </div>
+        )}
+
+        {cameraError && (
+          <p className="field__error camera-error" role="alert">{cameraError}</p>
+        )}
+
+        <canvas ref={canvasRef} style={{ display: 'none' }} aria-hidden="true" />
+
+        <div className="notes-actions">
+          {!cameraActive ? (
+            <button className="btn btn--primary notes-actions__main" onClick={startCamera}>
+              📷 Open Camera
+            </button>
+          ) : (
+            <>
+              <button className="btn btn--primary notes-actions__main" onClick={captureNote}>
+                {captured ? '✅ Saved!' : '📸 Capture'}
+              </button>
+              <button className="btn btn--ghost notes-actions__stop" onClick={stopCamera}>
+                ✕ Close
+              </button>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* ── Saved notes gallery ─────────────────── */}
+      <section className="section">
+        <div className="notes-gallery-header">
+          <h2 className="section__title">
+            Saved Notes {notes.length > 0 && <span className="notes-count">{notes.length}</span>}
+          </h2>
+        </div>
+
+        {notes.length === 0 ? (
+          <div className="empty-state">
+            <p className="empty-state__icon">🗒️</p>
+            <p className="empty-state__text">No notes yet</p>
+            <p className="empty-state__sub">Open the camera to capture your first note</p>
+          </div>
+        ) : (
           <div className="notes-grid">
             {notes.map(note => (
               <div key={note.id} className="note-thumb">
@@ -185,8 +232,13 @@ export default function Notes() {
               </div>
             ))}
           </div>
-        </section>
-      )}
+        )}
+      </section>
     </div>
   );
+
+  async function handleDeleteNote(id) {
+    await deleteNote(id);
+    setNotes(prev => prev.filter(n => n.id !== id));
+  }
 }
