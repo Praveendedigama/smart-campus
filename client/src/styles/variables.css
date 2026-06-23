@@ -1,40 +1,62 @@
 :root {
-  /* Brand colours */
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --primary-light: #dbeafe;
-  --secondary: #0ea5e9;
-  --success: #10b981;
-  --success-light: #d1fae5;
-  --danger: #ef4444;
-  --danger-light: #fee2e2;
-  --warn: #f59e0b;
-  --warn-light: #fef3c7;
+  /* ── Brand ─────────────────────────────────────── */
+  --primary:        #2563eb;
+  --primary-dark:   #1e40af;
+  --primary-mid:    #3b82f6;
+  --primary-light:  #eff6ff;
+  --primary-glow:   rgba(37, 99, 235, 0.18);
 
-  /* Text */
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
+  --success:        #059669;
+  --success-light:  #ecfdf5;
+  --danger:         #dc2626;
+  --danger-light:   #fef2f2;
+  --warn:           #d97706;
+  --warn-light:     #fffbeb;
 
-  /* Surfaces */
-  --bg: #f1f5f9;
-  --card: #ffffff;
-  --border: #e2e8f0;
+  /* ── Text ──────────────────────────────────────── */
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
 
-  /* Layout */
-  --nav-height: 64px;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --page-pad: 16px;
-  --radius: 12px;
-  --radius-sm: 8px;
+  /* ── Surfaces ──────────────────────────────────── */
+  --bg:             #f5f7ff;
+  --surface:        #eef2ff;
+  --card:           #ffffff;
+  --card-border:    rgba(0, 0, 0, 0.07);
+  --border:         #e2e8f0;
+  --border-strong:  #cbd5e1;
 
-  /* Elevation */
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  /* ── Layout ────────────────────────────────────── */
+  --nav-height:     68px;
+  --safe-bottom:    env(safe-area-inset-bottom, 0px);
+  --page-pad:       18px;
+  --radius-xl:      20px;
+  --radius:         16px;
+  --radius-sm:      12px;
+  --radius-xs:      8px;
 
-  /* Fluid type — scales from ~360px to 480px wide */
-  --text-sm: clamp(0.78rem, 0.72rem + 0.3vw, 0.85rem);
-  --text-base: clamp(0.9rem, 0.85rem + 0.25vw, 1rem);
-  --text-lg: clamp(1.05rem, 0.95rem + 0.5vw, 1.2rem);
-  --text-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.6rem);
+  /* ── Shadows ───────────────────────────────────── */
+  --shadow-sm:      0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow:         0 1px 3px rgba(0, 0, 0, 0.06),
+                    0 6px 20px rgba(0, 0, 0, 0.05);
+  --shadow-md:      0 4px 16px rgba(0, 0, 0, 0.09),
+                    0 1px 4px rgba(0, 0, 0, 0.05);
+  --shadow-lg:      0 8px 32px rgba(0, 0, 0, 0.12),
+                    0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-primary: 0 4px 18px rgba(37, 99, 235, 0.28),
+                    0 1px 4px rgba(37, 99, 235, 0.12);
+
+  /* ── Easing ────────────────────────────────────── */
+  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth:    cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast:       0.14s;
+  --dur-base:       0.22s;
+  --dur-slow:       0.36s;
+
+  /* ── Fluid type (360 → 480 px) ─────────────────── */
+  --text-xs:   clamp(0.68rem, 0.63rem + 0.25vw, 0.73rem);
+  --text-sm:   clamp(0.8rem,  0.74rem + 0.3vw,  0.875rem);
+  --text-base: clamp(0.9rem,  0.85rem + 0.25vw, 1rem);
+  --text-lg:   clamp(1.05rem, 0.95rem + 0.5vw,  1.2rem);
+  --text-xl:   clamp(1.3rem,  1.1rem  + 0.75vw, 1.6rem);
 }

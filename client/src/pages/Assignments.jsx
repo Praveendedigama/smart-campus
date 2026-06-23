@@ -153,17 +153,19 @@ export default function Assignments() {
           </div>
 
           <div className="field">
-            <label className="field__label" htmlFor="asgn-priority">Priority</label>
-            <select
-              id="asgn-priority"
-              className="field__input field__select"
-              value={form.priority}
-              onChange={handleField('priority')}
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
+            <label className="field__label">Priority</label>
+            <div className="priority-group">
+              {['low', 'medium', 'high'].map(p => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`priority-btn priority-btn--${p}${form.priority === p ? ' priority-btn--active' : ''}`}
+                  onClick={() => setForm(f => ({ ...f, priority: p }))}
+                >
+                  {p.charAt(0).toUpperCase() + p.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
 
           {formError && <p className="form__error" role="alert">{formError}</p>}
