@@ -1,0 +1,1 @@
+export const DEFAULT_CREDITS_REQUIRED = 120;
