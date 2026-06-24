@@ -10,15 +10,18 @@ export function useAssignments() {
     let cancelled = false;
 
     const load = async () => {
-      const cached = await getCachedAssignments();
-      if (cached.length && !cancelled) {
-        dispatch({ type: 'SET_ASSIGNMENTS', payload: cached });
-      }
+      try {
+        const cached = await getCachedAssignments();
+        if (Array.isArray(cached) && cached.length && !cancelled) {
+          dispatch({ type: 'SET_ASSIGNMENTS', payload: cached });
+        }
+      } catch { /* IndexedDB unavailable */ }
+
       try {
         const { data } = await axiosClient.get('/assignments');
         if (!cancelled) {
           dispatch({ type: 'SET_ASSIGNMENTS', payload: data });
-          await cacheAssignments(data);
+          if (Array.isArray(data)) await cacheAssignments(data);
         }
       } catch (err) {
         console.error('Failed to fetch assignments:', err.message);
@@ -57,12 +60,13 @@ export function useAssignments() {
     }
   };
 
+  const safeAssignments = Array.isArray(state.assignments) ? state.assignments : [];
   const now = new Date();
-  const filtered = state.assignments.filter(a => {
+  const filtered = safeAssignments.filter(a => {
     const due = new Date(a.dueDate);
-    if (state.assignmentFilter === 'pending') return a.status === 'pending' && due >= now;
+    if (state.assignmentFilter === 'pending')   return a.status === 'pending' && due >= now;
     if (state.assignmentFilter === 'completed') return a.status === 'completed';
-    if (state.assignmentFilter === 'overdue') return a.status === 'pending' && due < now;
+    if (state.assignmentFilter === 'overdue')   return a.status === 'pending' && due < now;
     return true;
   });
 

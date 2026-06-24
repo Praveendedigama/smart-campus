@@ -12,7 +12,7 @@ const initialState = {
 function reducer(state, action) {
   switch (action.type) {
     case 'SET_ASSIGNMENTS':
-      return { ...state, assignments: action.payload };
+      return { ...state, assignments: Array.isArray(action.payload) ? action.payload : [] };
     case 'ADD_ASSIGNMENT':
       return { ...state, assignments: [action.payload, ...state.assignments] };
     case 'UPDATE_ASSIGNMENT':
@@ -56,13 +56,18 @@ export function AppProvider({ children }) {
 
   useEffect(() => {
     const preload = async () => {
-      const cached = await getCachedAssignments();
-      if (cached.length) dispatch({ type: 'SET_ASSIGNMENTS', payload: cached });
+      try {
+        const cached = await getCachedAssignments();
+        if (Array.isArray(cached) && cached.length) {
+          dispatch({ type: 'SET_ASSIGNMENTS', payload: cached });
+        }
+      } catch { /* IndexedDB unavailable — skip cache */ }
+
       try {
         const { data } = await axiosClient.get('/assignments');
         dispatch({ type: 'SET_ASSIGNMENTS', payload: data });
-        await cacheAssignments(data);
-      } catch { /* cache serves if offline */ }
+        if (Array.isArray(data)) await cacheAssignments(data);
+      } catch { /* network offline — cached data already shown */ }
     };
     preload();
   }, []);

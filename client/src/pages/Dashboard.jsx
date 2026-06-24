@@ -24,10 +24,11 @@ export default function Dashboard() {
     month: 'long', day: 'numeric', year: 'numeric'
   });
   const now = new Date();
-  const pendingCount = state.assignments.filter(
+  const safeAssignments = Array.isArray(state.assignments) ? state.assignments : [];
+  const pendingCount = safeAssignments.filter(
     a => a.status === 'pending' && new Date(a.dueDate) >= now
   ).length;
-  const overdueCount = state.assignments.filter(
+  const overdueCount = safeAssignments.filter(
     a => a.status === 'pending' && new Date(a.dueDate) < now
   ).length;
 
