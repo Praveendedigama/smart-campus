@@ -8,9 +8,11 @@ export const requestPermission = async () => {
 };
 
 const REMINDER_WINDOW_HOURS = 24;
+const shownNotifs = new Set();
 
 export const scheduleDeadlineReminders = (assignments) => {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (localStorage.getItem('notifsMuted') === 'true') return;
 
   const now = new Date();
   let fired = 0;
@@ -21,6 +23,9 @@ export const scheduleDeadlineReminders = (assignments) => {
     const hoursLeft = (due - now) / (1000 * 60 * 60);
 
     if (hoursLeft > 0 && hoursLeft <= REMINDER_WINDOW_HOURS) {
+      if (shownNotifs.has(a._id)) return; // Prevent spamming same notification
+      shownNotifs.add(a._id);
+
       const label = hoursLeft < 1
         ? `${Math.round(hoursLeft * 60)} minutes`
         : `${Math.round(hoursLeft)} hours`;
@@ -36,10 +41,13 @@ export const scheduleDeadlineReminders = (assignments) => {
     }
   });
 
-  if (fired === 0) {
+  // Only show the "Keep it up" message if we haven't shown anything this session
+  if (fired === 0 && !shownNotifs.has('empty-fallback')) {
+    shownNotifs.add('empty-fallback');
     new Notification('Smart Campus', {
       body: `No assignments due in the next ${REMINDER_WINDOW_HOURS} hours. Keep it up!`,
-      icon: '/icons/icon-192.png'
+      icon: '/icons/icon-192.png',
+      tag: 'empty-fallback'
     });
   }
 };

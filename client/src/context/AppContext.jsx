@@ -72,6 +72,14 @@ export function AppProvider({ children }) {
     preload();
   }, []);
 
+  useEffect(() => {
+    import('../services/notifications.js').then(({ scheduleDeadlineReminders }) => {
+      if (Array.isArray(state.assignments) && state.assignments.length > 0) {
+        scheduleDeadlineReminders(state.assignments);
+      }
+    });
+  }, [state.assignments]);
+
   return (
     <AppContext.Provider value={{ state, dispatch }}>
       {children}
