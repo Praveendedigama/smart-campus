@@ -5,3 +5,4 @@ dist
 .DS_Store
 PROJECT_PLAN.md
 PROJECT_PLAN.pdf
+client/dev-dist/
