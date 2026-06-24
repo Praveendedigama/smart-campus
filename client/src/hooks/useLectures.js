@@ -21,10 +21,11 @@ export function useLectures() {
 
       try {
         const { data } = await axiosClient.get('/lectures/today');
+        const safeData = Array.isArray(data) ? data : [];
         if (!cancelled) {
-          setLectures(data);
+          setLectures(safeData);
           setError(null);
-          await cacheLectures(data);
+          await cacheLectures(safeData);
         }
       } catch (err) {
         if (!cancelled && !hasData) {
